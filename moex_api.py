@@ -3,13 +3,21 @@ import apimoex
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-import mapper
-import reducer
 import json
-import sys
-import multiprocessing
+
 
 BOTH = ("TRADEDATE", "OPEN", "CLOSE")
+
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 
 class MOEXData:
@@ -49,10 +57,7 @@ class Trades:
     def __init__(self):
         self.api = MOEXData()
 
-    def user_request(self):
-        year = input("DATE: ")
-        share = input("SHARE: ").upper()
-        flag = input("OPEN/CLOSE: ").upper()
+    def process_request(self, year, share, flag):
         df, df_target = self.api.get_year(year, share)
 
         inp = {}
@@ -61,11 +66,6 @@ class Trades:
         inp["data"] = json.loads(df.to_json())
         inp["flag"] = flag
 
-        q = multiprocessing.Queue()
-        p = multiprocessing.Process(target=mapper.map, args=(q,))
-        q.put(json.dumps(inp, cls=mapper.NpEncoder))
-        p.start()
-        p.join()
-        p.close()
+        to_hadoop = json.dumps(inp, cls=NpEncoder)
 
-        print("========================================================")
+        # тут надо как-то засунуть это в хадупиум

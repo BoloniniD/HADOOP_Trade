@@ -1,9 +1,7 @@
 import sys
-import reducer
 import json
 import numpy as np
 import pandas as pd
-import multiprocessing
 
 
 class NpEncoder(json.JSONEncoder):
@@ -17,12 +15,14 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 
-def map(q):
+def map():
     # делим дням недели год
     # рабочих дней 5, сб и вск не считаем
     # переделать на stdin для хадупа
-    inp = q.get()
-    prcs = []
+    inp = ""
+    for s in sys.stdin:
+        inp = inp + "\n" + s
+
     inp = json.loads(inp)
 
     df = pd.DataFrame(inp["data"])
@@ -33,12 +33,6 @@ def map(q):
         to_reduce["data"] = json.loads(s)
         to_reduce["flag"] = inp["flag"]
 
-        qq = multiprocessing.Queue()
-        qq.put(json.dumps(to_reduce))
-        p = multiprocessing.Process(target=reducer.reduce, args=(qq,))
-        prcs.append(p)
-        p.start()
+        to_reduce = json.dumps(to_reduce)
 
-    for i in prcs:
-        i.join()
-        i.close()
+        print(to_reduce)
