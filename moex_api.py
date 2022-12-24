@@ -4,6 +4,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import json
+import subprocess
 
 
 BOTH = ("TRADEDATE", "OPEN", "CLOSE")
@@ -67,5 +68,13 @@ class Trades:
         inp["flag"] = flag
 
         to_hadoop = json.dumps(inp, cls=NpEncoder)
+
+        with open("inp.txt", "w") as file:
+            file.write(to_hadoop)
+
+        subprocess.run(
+            "mapred streaming -input ./inp.txt -output ./out.txt -mapper ./bin/mapper.py -reducer ./bin/reducer.py -file ./bin/mapper.py -file ./bin/reducer.py",
+            shell=True,
+        )
 
         # тут надо как-то засунуть это в хадупиум
