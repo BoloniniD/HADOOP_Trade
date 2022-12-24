@@ -49,19 +49,44 @@ class Trades:
         for i in range(0, 5):
             yield df[df["WEEKDAY"] == i]
 
-    def reduce(self, df, target):
+    def reduce(self, df, target, ):
         # для каждого дня считаем выгодно/невыгодно было вкладываться
         # считаем процент когда было выгодно
         # считаем сколько в среднем заработали бы, вкладываясь удачно
         target_val = target.iloc[0].loc["CLOSE"]
-        stonks = df[df["CLOSE"] - target_val > 0]
+        stonks = pd.DataFrame()
+        not_stonks = pd.DataFrame()
+
+        stonks["CLOSE"] = df[target_val - df["CLOSE"] >= 0]["CLOSE"]
+        not_stonks["CLOSE"] = df[target_val - df["CLOSE"] < 0]["CLOSE"]
 
         percent = stonks.shape[0] / df.shape[0]
-        diff = stonks["CLOSE"] - target_val
 
         print(pd.to_datetime(df.iloc[0]["TRADEDATE"]).strftime("%A"))
-        print("Percent of profitable days:", percent)
-        print("Mean profit:", diff.mean())
+        print(
+            "Percent of profitable days: {:.2%}, {} out of {}".format(
+                percent, stonks.shape[0], df.shape[0]
+            )
+        )
+        print(
+            "- Profit days: {:.2%}".format(
+                (stonks.shape[0] * target_val - stonks["CLOSE"].sum())
+                / stonks["CLOSE"].sum()
+            )
+        )
+        print(
+            "- Loss days: {:.2%}".format(
+                (not_stonks.shape[0] * target_val - not_stonks["CLOSE"].sum())
+                / not_stonks["CLOSE"].sum()
+            )
+        )
+        print(
+            "- Overall: {:.2%}".format(
+                (df.shape[0] * target_val - df["CLOSE"].sum()) / df["CLOSE"].sum()
+            )
+        )
+        print("- - Investments: {0:0.2f}".format(df["CLOSE"].sum()))
+        print("- - Result: {0:0.2f}".format(df.shape[0] * target_val))
         print()
 
     def user_request(self):
