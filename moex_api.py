@@ -103,5 +103,4 @@ class Trades:
                 with open("./proj/{}".format(i), "r") as fil:
                     result.append(fil.readline())
 
-        with open("out.txt", "w") as fil:
-            fil.writelines(result)
+        return result
