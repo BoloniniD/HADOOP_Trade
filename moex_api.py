@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import numpy as np
 import subprocess
+from os import listdir
 
 
 BOTH = ("TRADEDATE", "OPEN", "CLOSE")
@@ -87,4 +88,20 @@ class Trades:
             shell=True,
         )
 
+        try:
+            subprocess.run("rm -rf proj", shell=True)
+        except:
+            pass
+
         subprocess.run("hadoop fs -get ./proj/output ./proj", shell=True)
+
+        out_files = listdir("./proj")
+
+        result = []
+        for i in out_files:
+            if i.startswith("part"):
+                with open("./proj/{}".format(i), "r") as fil:
+                    result.append(fil.readline())
+
+        with open("out.txt", "w") as fil:
+            fil.writelines(result)

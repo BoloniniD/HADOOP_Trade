@@ -1,4 +1,4 @@
-#!/bin/python
+#!/bin/python3
 
 import sys
 import json
@@ -60,7 +60,7 @@ def reduce():
             total_percent = -1
 
         print(
-            "{},{},{},{},{}".format(
+            "{},{},{},{},{},{},{}".format(
                 datetime.datetime.strptime(inp["data"][0][0], "%Y-%m-%d").strftime(
                     "%A"
                 ),
