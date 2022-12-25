@@ -168,11 +168,18 @@ class HaboobaBot:
                     message,
                     "Code is not valid"
                 )
-
+            m = None
+            d_m = None
             for i in self.trades_.process_request(date, code, phase):
                 if i == '':
                     continue
                 DAY, DAY_P, INCOME_IN_P_DAY, DAY_M, LOSS_IN_M_DAY, MONEY, MONEY_2 = i.split(',')
+                if m is None:
+                    m = float(MONEY_2)
+                    d_m = DAY
+                elif float(MONEY_2) > m:
+                    m = float(MONEY_2)
+                    d_m = DAY
                 self.bot.reply_to(
                     message,
                     f"DAY: {DAY};\n"
@@ -181,7 +188,12 @@ class HaboobaBot:
                     f"% of DAY WITH -: {DAY_M};\n"
                     f"% of LOSS: {LOSS_IN_M_DAY};\n"
                     f"TOTAL PUT: {MONEY};\n"
-                    f"CURRENT PRICE: {MONEY_2}.\n"
+                    f"CURRENT PRICE: {MONEY_2}\n"
+                )
+
+                self.bot.reply_to(
+                    message,
+                    f"BEST DAY TO BUY: {d_m}"
                 )
 
     def launchBot(self):
