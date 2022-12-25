@@ -2,42 +2,76 @@
 
 import sys
 import json
-import pandas as pd
+import datetime
 
 
 def reduce():
-    # для каждого дня считаем выгодно/невыгодно было вкладываться
-    # считаем процент когда было выгодно
-    # считаем сколько в среднем заработали бы, вкладываясь удачно
     inp = ""
     for s in sys.stdin:
         inp = s
 
         inp = json.loads(inp)
-
-        df = pd.DataFrame(inp["data"])
-
         target_val = inp["target"]
         flag = inp["flag"]
-        stonks = pd.DataFrame()
-        not_stonks = pd.DataFrame()
 
-        stonks[flag] = df[target_val - df[flag] >= 0][flag]
-        not_stonks[flag] = df[target_val - df[flag] < 0][flag]
+        if flag == "OPEN":
+            flag = 1
+        else:
+            flag = 2
 
-        percent = stonks.shape[0] / df.shape[0]
+        stonks = []
+        not_stonks = []
+        for i in inp["data"]:
+            if target_val - i[flag] >= 0:
+                stonks.append(i)
+            else:
+                not_stonks.append(i)
+
+        percent = len(stonks) / len(inp["data"])
+
+        sum_stonks = 0
+        sum_not_stonks = 0
+        total_sum = 0
+
+        for i in stonks:
+            sum_stonks += i[flag]
+
+        for i in not_stonks:
+            sum_not_stonks += i[flag]
+
+        for i in inp["data"]:
+            total_sum += i[flag]
+
+        try:
+            stonks_percent = (len(stonks) * target_val - sum_stonks) / sum_stonks
+        except:
+            stonks_percent = -1
+
+        try:
+            not_stonks_percent = (
+                len(not_stonks) * target_val - sum_not_stonks
+            ) / sum_not_stonks
+        except:
+            not_stonks_percent = -1
+
+        try:
+            total_percent = (len(inp["data"]) * target_val - total_sum) / total_sum
+        except:
+            total_percent = -1
 
         print(
             "{},{},{},{},{}".format(
-                pd.to_datetime(df.iloc[0]["TRADEDATE"]).strftime("%A"),
+                datetime.datetime.strptime(inp["data"][0][0], "%Y-%m-%d").strftime(
+                    "%A"
+                ),
                 percent,
-                (stonks.shape[0] * target_val - stonks[flag].sum()) / stonks[flag].sum(),
-                (not_stonks.shape[0] * target_val - not_stonks[flag].sum())
-                / not_stonks[flag].sum(),
-                (df.shape[0] * target_val - df[flag].sum()) / df[flag].sum(),
-                df[flag].sum(),
-                df.shape[0] * target_val,
+                stonks_percent,
+                not_stonks_percent,
+                total_percent,
+                total_sum,
+                len(inp["data"]) * target_val,
             )
         )
+
 
 reduce()

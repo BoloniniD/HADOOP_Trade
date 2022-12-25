@@ -34,7 +34,7 @@ class MOEXData:
             share,
             columns=BOTH,
             start="{}".format(
-                (date - relativedelta(years=1, days=1)).strftime("%Y-%m-%d")
+                (date - relativedelta(years=0, days=7)).strftime("%Y-%m-%d")
             ),
             end="{}".format((date - relativedelta(days=1)).strftime("%Y-%m-%d")),
         )
@@ -65,7 +65,7 @@ class Trades:
         inp = {}
 
         inp["target"] = df_target.iloc[0][flag]
-        inp["data"] = json.loads(df.to_json())
+        inp["data"] = df.values.tolist()
         inp["flag"] = flag
 
         to_hadoop = json.dumps(inp, cls=NpEncoder)
@@ -87,4 +87,4 @@ class Trades:
             shell=True,
         )
 
-        # тут надо как-то засунуть это в хадупиум
+        subprocess.run("hadoop fs -get /user/boloninid/proj/output ./proj", shell=True)
