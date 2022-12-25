@@ -65,7 +65,7 @@ class Trades:
         inp = {}
 
         inp["target"] = df_target.iloc[0][flag]
-        inp["data"] = json.loads(df.to_json())
+        inp["data"] = df.values.tolist()
         inp["flag"] = flag
 
         to_hadoop = json.dumps(inp, cls=NpEncoder)

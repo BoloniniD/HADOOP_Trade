@@ -2,19 +2,6 @@
 
 import sys
 import json
-import numpy as np
-import pandas as pd
-
-
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NpEncoder, self).default(obj)
 
 
 def map():
@@ -27,12 +14,14 @@ def map():
 
         inp = json.loads(inp)
 
-        df = pd.DataFrame(inp["data"])
         for i in range(0, 5):
-            s = df[df["WEEKDAY"] == i].to_json()
+            day = []
+            for j in inp["data"]:
+                if j[3] == i:
+                    day.append(j)
             to_reduce = {}
             to_reduce["target"] = inp["target"]
-            to_reduce["data"] = json.loads(s)
+            to_reduce["data"] = day
             to_reduce["flag"] = inp["flag"]
 
             to_reduce = json.dumps(to_reduce)
