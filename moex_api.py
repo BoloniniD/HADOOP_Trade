@@ -34,7 +34,7 @@ class MOEXData:
             share,
             columns=BOTH,
             start="{}".format(
-                (date - relativedelta(years=0, days=7)).strftime("%Y-%m-%d")
+                (date - relativedelta(years=1, days=1)).strftime("%Y-%m-%d")
             ),
             end="{}".format((date - relativedelta(days=1)).strftime("%Y-%m-%d")),
         )
@@ -83,8 +83,8 @@ class Trades:
         subprocess.run("hadoop fs -copyFromLocal ./inp.txt ./proj", shell=True)
 
         subprocess.run(
-            "mapred streaming -input /user/boloninid/proj/inp.txt -output /user/boloninid/proj/output -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
+            "mapred streaming -input ./proj/inp.txt -output ./proj/output -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
             shell=True,
         )
 
-        subprocess.run("hadoop fs -get /user/boloninid/proj/output ./proj", shell=True)
+        subprocess.run("hadoop fs -get ./proj/output ./proj", shell=True)
