@@ -55,6 +55,8 @@ class HaboobaBot:
                 )
                 return
 
+            self.trades_.user_request(date, code, phase)
+
             self.bot.reply_to(
                 message,
                 self.trades_.process_request(date, code, phase)
