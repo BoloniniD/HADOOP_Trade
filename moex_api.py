@@ -3,8 +3,24 @@ import apimoex
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
+import json
+import numpy as np
+import subprocess
+from os import listdir
 
-BOTH = ("TRADEDATE", "OPEN", "CLOSE", "VOLUME", "VALUE")
+
+BOTH = ("TRADEDATE", "OPEN", "CLOSE")
+
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 
 class MOEXData:
@@ -25,6 +41,7 @@ class MOEXData:
         )
         df = pd.DataFrame(data_year)
         df = df[df.notna()["CLOSE"]]
+        df = df[df.notna()["OPEN"]]
         df["WEEKDAY"] = pd.to_datetime(df["TRADEDATE"]).apply(lambda x: x.weekday())
 
         data_target_day = apimoex.get_board_history(
@@ -43,57 +60,48 @@ class Trades:
     def __init__(self):
         self.api = MOEXData()
 
-    def map(self, df):
-        # делим дням недели год
-        # рабочих дней 5, сб и вск не считаем
-        for i in range(0, 5):
-            yield df[df["WEEKDAY"] == i]
-
-    def reduce(self, df, target, ):
-        # для каждого дня считаем выгодно/невыгодно было вкладываться
-        # считаем процент когда было выгодно
-        # считаем сколько в среднем заработали бы, вкладываясь удачно
-        target_val = target.iloc[0].loc["CLOSE"]
-        stonks = pd.DataFrame()
-        not_stonks = pd.DataFrame()
-
-        stonks["CLOSE"] = df[target_val - df["CLOSE"] >= 0]["CLOSE"]
-        not_stonks["CLOSE"] = df[target_val - df["CLOSE"] < 0]["CLOSE"]
-
-        percent = stonks.shape[0] / df.shape[0]
-
-        print(pd.to_datetime(df.iloc[0]["TRADEDATE"]).strftime("%A"))
-        print(
-            "Percent of profitable days: {:.2%}, {} out of {}".format(
-                percent, stonks.shape[0], df.shape[0]
-            )
-        )
-        print(
-            "- Profit days: {:.2%}".format(
-                (stonks.shape[0] * target_val - stonks["CLOSE"].sum())
-                / stonks["CLOSE"].sum()
-            )
-        )
-        print(
-            "- Loss days: {:.2%}".format(
-                (not_stonks.shape[0] * target_val - not_stonks["CLOSE"].sum())
-                / not_stonks["CLOSE"].sum()
-            )
-        )
-        print(
-            "- Overall: {:.2%}".format(
-                (df.shape[0] * target_val - df["CLOSE"].sum()) / df["CLOSE"].sum()
-            )
-        )
-        print("- - Investments: {0:0.2f}".format(df["CLOSE"].sum()))
-        print("- - Result: {0:0.2f}".format(df.shape[0] * target_val))
-        print()
-
-    def user_request(self):
-        year = input("DATE: ")
-        share = input("SHARE: ")
+    def process_request(self, year, share, flag):
         df, df_target = self.api.get_year(year, share)
 
-        for i in self.map(df):
-            self.reduce(i, df_target)
-        print("========================================================")
+        inp = {}
+
+        inp["target"] = df_target.iloc[0][flag]
+        inp["data"] = df.values.tolist()
+        inp["flag"] = flag
+
+        to_hadoop = json.dumps(inp, cls=NpEncoder)
+
+        with open("inp.txt", "w") as file:
+            file.write(to_hadoop)
+
+        try:
+            subprocess.run("hadoop fs -rm -r -f proj", shell=True)
+        except:
+            pass
+
+        subprocess.run("hadoop fs -mkdir proj", shell=True)
+
+        subprocess.run("hadoop fs -copyFromLocal ./inp.txt ./proj", shell=True)
+
+        subprocess.run(
+            "mapred streaming -input ./proj/inp.txt -output ./proj/output -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
+            shell=True,
+        )
+
+        try:
+            subprocess.run("rm -rf proj", shell=True)
+        except:
+            pass
+
+        subprocess.run("hadoop fs -get ./proj/output ./proj", shell=True)
+
+        out_files = listdir("./proj")
+
+        result = []
+        for i in out_files:
+            if i.startswith("part"):
+                with open("./proj/{}".format(i), "r") as fil:
+                    result.append(fil.readline())
+
+        with open("out.txt", "w") as fil:
+            fil.writelines(result)
