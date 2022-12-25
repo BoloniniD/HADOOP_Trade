@@ -140,9 +140,16 @@ class HaboobaBot:
             # reply to add_config command
             print("Received get_strategy message")
 
+            if len(message.text.split()[1:]) < 3:
+                self.bot.reply_to(
+                    message,
+                    "Not enough args"
+                )
+                return
+
             date, code, phase = message.text.split()[1:]
 
-            if phase not in {"mourning", "evening"}:
+            if phase not in {"OPEN", "CLOSE"}:
                 self.bot.reply_to(
                     message,
                     "Please choose phase of day correctly: OPEN/CLOSE"
@@ -161,11 +168,33 @@ class HaboobaBot:
                     message,
                     "Code is not valid"
                 )
+            m = None
+            d_m = None
+            for i in self.trades_.process_request(date, code, phase):
+                if i == '':
+                    continue
+                DAY, DAY_P, INCOME_IN_P_DAY, DAY_M, LOSS_IN_M_DAY, MONEY, MONEY_2 = i.split(',')
+                if m is None:
+                    m = float(MONEY_2)
+                    d_m = DAY
+                elif float(MONEY_2) > m:
+                    m = float(MONEY_2)
+                    d_m = DAY
+                self.bot.reply_to(
+                    message,
+                    f"DAY: {DAY};\n"
+                    f"% of DAY WITH +: {DAY_P};\n"
+                    f"% of INCOME: {INCOME_IN_P_DAY};\n"
+                    f"% of DAY WITH -: {DAY_M};\n"
+                    f"% of LOSS: {LOSS_IN_M_DAY};\n"
+                    f"TOTAL PUT: {MONEY};\n"
+                    f"CURRENT PRICE: {MONEY_2}\n"
+                )
 
-            self.bot.reply_to(
-                message,
-                self.trades_.process_request(date, code, phase)
-            )
+                self.bot.reply_to(
+                    message,
+                    f"BEST DAY TO BUY: {d_m}"
+                )
 
     def launchBot(self):
         # start polling
