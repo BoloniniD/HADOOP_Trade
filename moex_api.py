@@ -4,6 +4,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import json
+import numpy as np
 import subprocess
 
 
@@ -72,8 +73,17 @@ class Trades:
         with open("inp.txt", "w") as file:
             file.write(to_hadoop)
 
+        try:
+            subprocess.run("hadoop fs -rm -r -f proj", shell=True)
+        except:
+            pass
+
+        subprocess.run("hadoop fs -mkdir proj", shell=True)
+
+        subprocess.run("hadoop fs -copyFromLocal ./inp.txt ./proj", shell=True)
+
         subprocess.run(
-            "mapred streaming -input ./inp.txt -output ./out.txt -mapper ./bin/mapper.py -reducer ./bin/reducer.py -file ./bin/mapper.py -file ./bin/reducer.py",
+            "mapred streaming -input /user/boloninid/proj/inp.txt -output /user/boloninid/proj/output.txt -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
             shell=True,
         )
 
