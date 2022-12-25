@@ -83,7 +83,7 @@ class Trades:
         subprocess.run("hadoop fs -copyFromLocal ./inp.txt ./proj", shell=True)
 
         subprocess.run(
-            "mapred streaming -input /user/boloninid/proj/inp.txt -output /user/boloninid/proj/output.txt -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
+            "mapred streaming -input /user/boloninid/proj/inp.txt -output /user/boloninid/proj/output -mapper mapper.py -file ./mapper.py -reducer reducer.py -file ./reducer.py",
             shell=True,
         )
 
