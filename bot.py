@@ -181,7 +181,7 @@ class HaboobaBot:
             ready = []
             if os.path.isfile("./results/{}_{}_{}.csv".format(date, code, phase)):
                 with open("./results/{}_{}_{}.csv".format(date, code, phase), "r") as fil:
-                    fil.readlines(ready)
+                    ready = fil.readlines()
             else:
                 ready = self.trades_.process_request(date, code, phase)
 
