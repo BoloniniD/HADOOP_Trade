@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime
+import os
 
 import moex_api
 
@@ -177,9 +178,16 @@ class HaboobaBot:
                 )
                 return
 
+            ready = []
+            if os.path.isfile("./results/{}_{}_{}.csv".format(date, code, phase)):
+                with open("./results/{}_{}_{}.csv".format(date, code, phase), "r") as fil:
+                    fil.readlines(ready)
+            else:
+                ready = self.trades_.process_request(date, code, phase)
+
             m = None
             d_m = None
-            for i in self.trades_.process_request(date, code, phase):
+            for i in ready:
                 if i == '':
                     continue
                 DAY, DAY_P, INCOME_IN_P_DAY, DAY_M, LOSS_IN_M_DAY, MONEY, MONEY_2 = i.split(',')
@@ -204,6 +212,12 @@ class HaboobaBot:
                 message,
                 f"BEST DAY TO BUY: {d_m}"
             )
+
+            if not os.path.isdir('results'):
+                os.mkdir("results")
+
+            with open("./results/{}_{}_{}.csv".format(date, code, phase), "w") as fil:
+                fil.writelines(ready)
 
     def launchBot(self):
         # start polling
