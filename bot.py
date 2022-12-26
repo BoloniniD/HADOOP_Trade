@@ -132,7 +132,7 @@ class HaboobaBot:
                 "/start - start bot\n"
                 "/help - show this message\n"
                 "/get_strategy <date(YYYY-MM-DD)>(from 2013-01-01) <MOEX code> <phase of day(OPEN/CLOSE)>(e.g. "
-                "2002.05.03 YNDX OPEN) "
+                "2021-10-14 YNDX OPEN) "
             )
 
         @self.bot.message_handler(commands=["get_strategy"])
@@ -198,10 +198,10 @@ class HaboobaBot:
                     f"CURRENT PRICE: {MONEY_2}\n"
                 )
 
-                self.bot.reply_to(
-                    message,
-                    f"BEST DAY TO BUY: {d_m}"
-                )
+            self.bot.reply_to(
+                message,
+                f"BEST DAY TO BUY: {d_m}"
+            )
 
     def launchBot(self):
         # start polling
