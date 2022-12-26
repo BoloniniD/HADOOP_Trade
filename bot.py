@@ -163,6 +163,13 @@ class HaboobaBot:
                 )
                 return
 
+            if code not in stocks:
+                self.bot.reply_to(
+                    message,
+                    "Code is not valid for MOEX"
+                )
+                return
+
             if not moex_api.check_date(date, code):
                 self.bot.reply_to(
                     message,
@@ -170,11 +177,6 @@ class HaboobaBot:
                 )
                 return
 
-            if code not in stocks:
-                self.bot.reply_to(
-                    message,
-                    "Code is not valid"
-                )
             m = None
             d_m = None
             for i in self.trades_.process_request(date, code, phase):

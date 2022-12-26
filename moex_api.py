@@ -118,6 +118,8 @@ class Trades:
         for i in out_files:
             if i.startswith("part"):
                 with open("./proj/{}".format(i), "r") as fil:
-                    result.append(fil.readline())
+                    days = fil.readlines()
+                    for j in days:
+                        result.append(j)
 
         return result
