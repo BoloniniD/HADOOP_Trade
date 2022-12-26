@@ -23,6 +23,23 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 
+def check_date(date, share):
+    date = pd.to_datetime(date)
+    session = requests.Session()
+    data_target_day = apimoex.get_board_history(
+        session,
+        share,
+        columns=BOTH,
+        start="{}".format(date.strftime("%Y-%m-%d")),
+        end="{}".format(date.strftime("%Y-%m-%d")),
+    )
+    df_check = pd.DataFrame(data_target_day)
+    if "CLOSE" not in df_check.columns or "OPEN" not in df_check.columns:
+        return False
+
+    return True
+
+
 class MOEXData:
     def __init__(self):
         self.session = requests.Session()
