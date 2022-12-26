@@ -163,6 +163,13 @@ class HaboobaBot:
                 )
                 return
 
+            if not moex_api.check_date(date, code):
+                self.bot.reply_to(
+                    message,
+                    "Cannot find date: {}.\nThis can happen if there were no trades on this date.\n(For example, the day was a weekend).\n".format(date)
+                )
+                return
+
             if code not in stocks:
                 self.bot.reply_to(
                     message,
